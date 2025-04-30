@@ -199,7 +199,7 @@ important_websites = {
 }
 
 def open_dynamic_website(command):
-    """Asks for a website name and attempts to open it in a browser."""
+    """Opens any website and is called when command has website word in it."""
     command = command.lower()  # Convert to lowercase for easier matching
 
     # Remove common irrelevant words (like 'open', 'go to', 'search for')
@@ -234,7 +234,8 @@ def extract_website_name(command):
     return None  # No match found 
 
 def open_common_website(command):
-    command = command.strip()  # Clean the command
+    """It opens the most common websites"""
+    command = command.strip()  # Clean the command remove the spaces in start and end of the command
 
     for site_name in important_websites:
         if site_name in command:
@@ -309,6 +310,13 @@ def weather_info():
     except TypeError as er:
         speak("No city name was recognized.")
 
+def get_current_brightness():
+    try:
+        return sbc.get_brightness(display=0)[0]      # Returns the current brightness
+    except Exception as e:
+        speak("Could not retrieve brightness.")     # Notify user of error and return nothing
+        return None
+    
 def set_brightness(level):
     """Adjust screen brightness to the given level."""
     try:
@@ -327,12 +335,50 @@ def extract_brightness_level(command):
     return None  # Return None if no number was found
 
 def adjust_brightness(command):
-    """Adjust screen brightness based on a voice command."""
-    level = extract_brightness_level(command)  # Extract brightness level from command
-    if level is not None:  # If a valid brightness level is found
-        set_brightness(level)  # Set screen brightness
+    command = command.lower().strip()    # Converting the command to lower case and removing additional spaces to process it better
+    current = get_current_brightness()
+    if current is None:
+        return
+
+    level = extract_brightness_level(command)
+
+    # Check for set brightness intent
+    """              any keyword:
+       Returns True if at least one element is True.
+       Returns False if all elements are False or the iterable is empty."""
+    if any(word in command for word in bright_set_words):
+        if level is not None:
+            sbc.set_brightness(level)
+            speak(f"Set brightness to {level}%")
+            print(current)
+        else:
+            speak("Please specify a brightness level.")
+
+    # Check for decrease brightness intent
+    elif any(word in command for word in bright_decrease_words):
+        new_level = max(current - (level if level is not None else 20), 0)
+        sbc.set_brightness(new_level)
+        speak(f"Decreased brightness to {new_level}%")
+        print(current)
+
+    # Check for increase brightness intent
+    elif any(word in command for word in bright_increase_words):    # any keyword returns true or false depending upon the iterable object
+        new_level = min(current + (level if level is not None else 20), 100)     # Brightness should not be greater than 100.
+        sbc.set_brightness(new_level)
+        speak(f"Increased brightness to {new_level}%")
+        print(current)
     else:
-        speak("No valid brightness level found.")  # Inform user if no valid number was found
+        speak("Brightness command not recognized.")
+
+    bright_increase_words = ["increase", "rise", "up", "raise", "illuminate", "improve", "add", "brighter", "bright", "high", "higher", "more", "enhance", "boost"]
+    bright_decrease_words = ["decrease", "fall", "down", "lower", "substract", "dimmer", "dim", "low", "less", "reduce", "darken"]
+    bright_set_words = [
+        'set', 'adjust', 'change', 'make', 'put', 'switch to', 'move to',
+        'fix at', 'turn to', 'brightness should be', 'brightness needs to be',
+        'i want brightness at', 'brightness to be'
+    ]
+
+    
 
 def telldate():
     today = datetime.datetime.today().strftime("%A, %d %B %Y")
@@ -348,6 +394,9 @@ def choose_your_own_greeting():
     pass
 
 def choose_my_name():
+    pass
+
+def set_volume(command):
     pass
 
 def handle_command(command):
@@ -369,7 +418,7 @@ def handle_command(command):
            telldate()
         if "time" in command:
            get_time()
-    elif "brightness" in command:
+    elif "brightness" in command or "brighter" in command or "illuminate" in command or "lighten" in command:
         adjust_brightness(command)
     elif "open" in command and extract_website_name(command) in command:
         open_common_website(command)
