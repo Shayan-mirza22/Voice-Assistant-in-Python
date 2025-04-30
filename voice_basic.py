@@ -13,10 +13,30 @@ import pythoncom  # Importing pythoncom to handle COM (Component Object Model) o
 import win32com.client  # Importing win32com.client to create and manage COM objects, often used for automating Windows applications. These both are used for searching and opening files
 import screen_brightness_control as sbc  # Importing screen_brightness_control to adjust the screen brightness on a Windows system
 import re  # Importing re (regular expressions) to search, match, and manipulate text patterns (e.g., extracting numbers from voice commands) used in brightness and volume control 
-import pywhatkit as pwk # for whatsapp messaging 
+# import pywhatkit as pwk # for whatsapp messaging 
+# Importing the pycaw library, which allows control of the Windows audio system
+#import pycaw
+# 'ctypes' is a Python library for interacting with C-compatible data types. C-compatible data types are data types that follow the same structure, size, and memory layout as defined in the C programming language which is required as windows is developed in C and C++
+# 'cast' is used to convert one pointer type to another. cast is a function from the ctypes module in Python. It is used to convert (or cast) a data type or object to a specific C-compatible type, especially pointers to structures or interfaces — just like casting in C or C++.
+# 'POINTER' is used to define pointer types to COM interfaces.
+from ctypes import cast, POINTER
+# COM (Component Object Model) is a Microsoft technology that enables software components to communicate with each other.
+# A COM interface is essentially a contract between software components. It defines a set of methods that a COM object must implement.
+# A COM interface is essentially a contract between software components. It defines a set of methods that a COM object must implement.
+# 'comtypes' is a package for defining and calling COM interfaces in Windows.
+# 'CLSCTX_ALL' is a constant specifying the context in which the COM object is activated.
+# Here, it allows accessing the audio endpoint in all available contexts (in-process, out-of-process, etc.)
+from comtypes import CLSCTX_ALL
+# Importing classes from pycaw to access audio devices and control their volume
+from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
+# - AudioUtilities: Provides functions to get all active audio devices.
+# - IAudioEndpointVolume: Interface that gives access to volume settings of an audio endpoint (e.g., your speaker).
+from volume_control import init_volume_control, process_volume_command
+
 # Initialize speech recognizer and text-to-speech engine
 recognizer = sr.Recognizer()
 engine = pyttsx3.init()
+init_volume_control()
 
 def speak(text):
     """Converts text to speech and speaks it aloud."""
@@ -335,6 +355,13 @@ def extract_brightness_level(command):
     return None  # Return None if no number was found
 
 def adjust_brightness(command):
+    bright_increase_words = ["increase", "rise", "up", "raise", "illuminate", "improve", "add", "brighter", "bright", "high", "higher", "more", "enhance", "boost"]
+    bright_decrease_words = ["decrease", "fall", "down", "lower", "substract", "dimmer", "dim", "low", "less", "reduce", "darken"]
+    bright_set_words = [
+        'set', 'adjust', 'change', 'make', 'put', 'switch to', 'move to',
+        'fix at', 'turn to', 'brightness should be', 'brightness needs to be',
+        'i want brightness at', 'brightness to be'
+    ]
     command = command.lower().strip()    # Converting the command to lower case and removing additional spaces to process it better
     current = get_current_brightness()
     if current is None:
@@ -369,16 +396,6 @@ def adjust_brightness(command):
         print(current)
     else:
         speak("Brightness command not recognized.")
-
-    bright_increase_words = ["increase", "rise", "up", "raise", "illuminate", "improve", "add", "brighter", "bright", "high", "higher", "more", "enhance", "boost"]
-    bright_decrease_words = ["decrease", "fall", "down", "lower", "substract", "dimmer", "dim", "low", "less", "reduce", "darken"]
-    bright_set_words = [
-        'set', 'adjust', 'change', 'make', 'put', 'switch to', 'move to',
-        'fix at', 'turn to', 'brightness should be', 'brightness needs to be',
-        'i want brightness at', 'brightness to be'
-    ]
-
-    
 
 def telldate():
     today = datetime.datetime.today().strftime("%A, %d %B %Y")
@@ -420,6 +437,9 @@ def handle_command(command):
            get_time()
     elif "brightness" in command or "brighter" in command or "illuminate" in command or "lighten" in command:
         adjust_brightness(command)
+
+    elif any(word in command.lower() for word in ["volume", "sound level", "louder", "quieter", "mute"]):
+        process_volume_command(command, speak)
     elif "open" in command and extract_website_name(command) in command:
         open_common_website(command)
     elif "exit" in command or "stop" in command:
