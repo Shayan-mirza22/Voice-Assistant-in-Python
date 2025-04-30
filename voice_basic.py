@@ -362,6 +362,8 @@ def adjust_brightness(command):
         'fix at', 'turn to', 'brightness should be', 'brightness needs to be',
         'i want brightness at', 'brightness to be'
     ]
+    check_brightness_words = ["what's the brightness", "current brightness", "brightness level", "tell me the brightness", "get brightness"]
+
     command = command.lower().strip()    # Converting the command to lower case and removing additional spaces to process it better
     current = get_current_brightness()
     if current is None:
@@ -377,7 +379,7 @@ def adjust_brightness(command):
         if level is not None:
             sbc.set_brightness(level)
             speak(f"Set brightness to {level}%")
-            print(current)
+            #print(current)
         else:
             speak("Please specify a brightness level.")
 
@@ -386,14 +388,25 @@ def adjust_brightness(command):
         new_level = max(current - (level if level is not None else 20), 0)
         sbc.set_brightness(new_level)
         speak(f"Decreased brightness to {new_level}%")
-        print(current)
+        #print(current)
 
+    # Check for brightness query
+    elif any(word in command for word in check_brightness_words):
+        brightness = get_current_brightness()  # Replace with the actual method for getting brightness
+        if brightness is not None:
+            speak(f"The current brightness is {brightness} percent")
+            return True
+        speak("I couldn't determine the current brightness")
+        return False
+    
     # Check for increase brightness intent
     elif any(word in command for word in bright_increase_words):    # any keyword returns true or false depending upon the iterable object
         new_level = min(current + (level if level is not None else 20), 100)     # Brightness should not be greater than 100.
         sbc.set_brightness(new_level)
         speak(f"Increased brightness to {new_level}%")
-        print(current)
+        #print(current)
+    
+
     else:
         speak("Brightness command not recognized.")
 
