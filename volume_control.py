@@ -170,6 +170,9 @@ def process_volume_command(command, speak_func=None):
     
     # Volume decrease keywords
     down_words = ["decrease", "down", "lower", "quieter", "reduce", "volume down"]
+
+    check_words = ["what's the volume", "current volume", "volume level", "tell me the volume", "get volume"] # to check current status 
+
     
     # Extract volume level
     level = extract_level(command)
@@ -202,7 +205,15 @@ def process_volume_command(command, speak_func=None):
             return True
         speak_func("Failed to decrease volume")
         return False
-    
+    # Check for volume query
+    elif any(word in command for word in check_words):
+        level = get_volume()
+        if level is not None:
+            speak_func(f"The current volume is {level} percent")
+            return True
+        speak_func("I couldn't determine the current volume")
+        return False
+
     speak_func("Volume command not recognized")
     return False
 
