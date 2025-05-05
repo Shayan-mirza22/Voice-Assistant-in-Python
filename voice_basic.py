@@ -426,9 +426,6 @@ def choose_your_own_greeting():
 def choose_my_name():
     pass
 
-def set_volume(command):
-    pass
-
 def handle_command(command):
     """Processes and executes a given voice command."""
     if "hello" in command:
