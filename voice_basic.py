@@ -9,6 +9,7 @@ import shutil  # File and directory management
 from geopy.geocoders import Nominatim              # pip install geopy  and pip install geocoder
 from geopy import distance
 from geopy.distance import geodesic  # Calculating distances between geographical coordinates
+import pyjokes  # Generating random jokes
 # from fuzzywuzzy import process  # Fuzzy string matching to handle variations in user input
 # import threading  # Running background processes for performance optimization
 import requests  # Importing the requests library to make HTTP requests (e.g., fetching data from APIs) Used here for getting weather updates and much more
@@ -168,7 +169,12 @@ def get_wifi_name():
     except Exception as e:
         return f"Error getting Wi-Fi name: {e}"
     
-""" def check_internet_speed():
+def tell_joke():
+    """Fetches and speaks a random joke."""
+    joke = pyjokes.get_joke()  # Get a random joke
+    speak(joke)  # Speak the joke aloud
+
+    """ def check_internet_speed():
     st = Speedtest()  # Create a Speedtest object
     speak("Wait!! I am checking your Internet Speed...")
     dw_speed = st.download()
