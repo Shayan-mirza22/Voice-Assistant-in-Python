@@ -14,6 +14,7 @@ import win32com.client  # Importing win32com.client to create and manage COM obj
 import screen_brightness_control as sbc  # Importing screen_brightness_control to adjust the screen brightness on a Windows system
 import re  # Importing re (regular expressions) to search, match, and manipulate text patterns (e.g., extracting numbers from voice commands) used in brightness and volume control 
 import pyautogui  # Importing pyautogui to control the mouse and keyboard, allowing for GUI automation (e.g., clicking buttons, typing text)
+# import speedtest # Importing speedtest to measure internet speed (download/upload) and ping time
 # import pywhatkit as pwk # for whatsapp messaging 
 # Importing the pycaw library, which allows control of the Windows audio system
 #import pycaw
@@ -115,13 +116,38 @@ def take_screenshot():
 def check_internet_connection():
     """Checks if the internet connection is available."""
     try:
-        response = requests.get("http://www.google.com", timeout=5)  # Check connectivity to Google
-        return True if response.status_code == 200 else False
-        speak("Internet connection is available.")
+        response = requests.get("http://www.google.com", timeout=5)
+        if response.status_code == 200:
+            speak(f"You are connected to {get_wifi_name()} ")
+            return True
+        else:
+            speak("Unable to reach the internet.")
+            return False
     except requests.ConnectionError:
-        return False  # If there's a connection error
         speak("No internet connection. Please check your network settings.")
+        return False
+
+def get_wifi_name():
+    try:
+        result = subprocess.check_output(["netsh", "wlan", "show", "interfaces"], text=True)
+        for line in result.split("\n"):
+            if "SSID" in line and "BSSID" not in line:
+                ssid = line.split(":")[1].strip()
+                return ssid
+        return "Wi-Fi not connected"
+    except Exception as e:
+        return f"Error getting Wi-Fi name: {e}"
     
+""" def check_internet_speed():
+    st = Speedtest()  # Create a Speedtest object
+    speak("Wait!! I am checking your Internet Speed...")
+    dw_speed = st.download()
+    up_speed = st.upload()
+    dw_speed = dw_speed / 1000000
+    up_speed = up_speed / 1000000
+    speak(f'Your download speed is {round(dw_speed, 3)} Mbps')
+    speak(f'Your upload speed is {round(up_speed, 3)} Mbps')     
+  """
 def search_wikipedia(command):
     """Search Wikipedia based on a flexible user command."""
     
@@ -470,6 +496,8 @@ def handle_command(command):
            telldate()
         if "time" in command:
            get_time()
+    elif "internet" in command or "network" in command or "wifi" in command:
+            check_internet_connection()
     elif "brightness" in command or "brighter" in command or "illuminate" in command or "lighten" in command:
         adjust_brightness(command)
     elif "screenshot" in command or "take a screenshot" in command:
