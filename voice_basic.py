@@ -13,6 +13,7 @@ import pythoncom  # Importing pythoncom to handle COM (Component Object Model) o
 import win32com.client  # Importing win32com.client to create and manage COM objects, often used for automating Windows applications. These both are used for searching and opening files
 import screen_brightness_control as sbc  # Importing screen_brightness_control to adjust the screen brightness on a Windows system
 import re  # Importing re (regular expressions) to search, match, and manipulate text patterns (e.g., extracting numbers from voice commands) used in brightness and volume control 
+import pyautogui  # Importing pyautogui to control the mouse and keyboard, allowing for GUI automation (e.g., clicking buttons, typing text)
 # import pywhatkit as pwk # for whatsapp messaging 
 # Importing the pycaw library, which allows control of the Windows audio system
 #import pycaw
@@ -96,6 +97,21 @@ def get_time():
     Opens a given website URL in the default web browser.
     speak(f"Opening {site_name}")
     webbrowser.open(url)  # Opens the website """
+
+def take_screenshot():
+    """Takes a screenshot and saves it to the current directory."""
+    screenshot = pyautogui.screenshot()  # Take a screenshot
+    path = "D:\\SSofVoiceAssistant"  # Directory to save the screenshot
+    if not os.path.exists(path):  # Check if the directory exists
+        os.makedirs(path, exist_ok=True)
+    filename = f"screenshot_{datetime.datetime.now().strftime('%Y-%m-%d')}.png"
+    try:
+        screenshot.save(f"{path}\\{filename}")  # Save the screenshot with a timestamp
+        speak("Screenshot taken successfully!")
+    except Exception as e:
+        speak("Failed to take screenshot.")
+        print("Error:", e)
+
 
 def search_wikipedia(command):
     """Search Wikipedia based on a flexible user command."""
@@ -447,7 +463,8 @@ def handle_command(command):
            get_time()
     elif "brightness" in command or "brighter" in command or "illuminate" in command or "lighten" in command:
         adjust_brightness(command)
-
+    elif "screenshot" in command or "take a screenshot" in command:
+        take_screenshot()
     elif any(word in command.lower() for word in ["volume", "sound level", "louder", "quieter", "mute"]):
         process_volume_command(command, speak)
     elif "open" in command and extract_website_name(command) in command:
