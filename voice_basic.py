@@ -6,6 +6,9 @@ import wikipedia  # Searching and fetching summaries from Wikipedia
 import os  # Operating system-related functions (file handling, directory access)
 import subprocess  # Running system commands and opening applications
 import shutil  # File and directory management
+from geopy.geocoders import Nominatim              # pip install geopy  and pip install geocoder
+from geopy import distance
+from geopy.distance import geodesic  # Calculating distances between geographical coordinates
 # from fuzzywuzzy import process  # Fuzzy string matching to handle variations in user input
 # import threading  # Running background processes for performance optimization
 import requests  # Importing the requests library to make HTTP requests (e.g., fetching data from APIs) Used here for getting weather updates and much more
@@ -116,7 +119,8 @@ def take_screenshot():
 def check_internet_connection():
     """Checks if the internet connection is available."""
     try:
-        response = requests.get("http://www.google.com", timeout=5)
+        response = requests.get("http://www.google.com", timeout=5)    # Trying to connect to Google to check if internet is available
+        # If the response is successful (status code 200), it means internet is available
         if response.status_code == 200:
             speak(f"You are connected to {get_wifi_name()} ")
             return True
@@ -126,6 +130,32 @@ def check_internet_connection():
     except requests.ConnectionError:
         speak("No internet connection. Please check your network settings.")
         return False
+
+def calculate_distance():
+    geocoder = Nominatim(user_agent="Shayan Mirza")  # Initialize geocoder
+
+    speak("Tell me the first city name?")
+    location1 = listen()
+    speak("Tell me the second city name?")
+    location2 = listen()
+
+    coordinates1 = geocoder.geocode(location1)
+    coordinates2 = geocoder.geocode(location2)
+
+    if coordinates1 is None or coordinates2 is None:
+        speak("Sorry, I couldn't find one of the locations.")
+        return
+
+    lat1, long1 = coordinates1.latitude, coordinates1.longitude
+    lat2, long2 = coordinates2.latitude, coordinates2.longitude
+
+    place1 = (lat1, long1)
+    place2 = (lat2, long2)
+
+    distance_km = geodesic(place1, place2).km
+    rounded_distance = round(distance_km)
+
+    speak(f"The distance between {location1.title()} and {location2.title()} is {rounded_distance} kilometers.")
 
 def get_wifi_name():
     try:
@@ -502,6 +532,8 @@ def handle_command(command):
         adjust_brightness(command)
     elif "screenshot" in command or "take a screenshot" in command:
         take_screenshot()
+    elif "distance" in command:
+        calculate_distance()
     elif any(word in command.lower() for word in ["volume", "sound level", "louder", "quieter", "mute"]):
         process_volume_command(command, speak)
     elif "open" in command and extract_website_name(command) in command:
