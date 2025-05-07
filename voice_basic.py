@@ -112,7 +112,16 @@ def take_screenshot():
         speak("Failed to take screenshot.")
         print("Error:", e)
 
-
+def check_internet_connection():
+    """Checks if the internet connection is available."""
+    try:
+        response = requests.get("http://www.google.com", timeout=5)  # Check connectivity to Google
+        return True if response.status_code == 200 else False
+        speak("Internet connection is available.")
+    except requests.ConnectionError:
+        return False  # If there's a connection error
+        speak("No internet connection. Please check your network settings.")
+    
 def search_wikipedia(command):
     """Search Wikipedia based on a flexible user command."""
     
