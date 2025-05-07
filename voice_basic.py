@@ -6,6 +6,7 @@ import wikipedia  # Searching and fetching summaries from Wikipedia
 import os  # Operating system-related functions (file handling, directory access)
 import subprocess  # Running system commands and opening applications
 import shutil  # File and directory management
+from utilities import speak, listen  # Importing custom functions for text-to-speech and speech recognition
 from geopy.geocoders import Nominatim              # pip install geopy  and pip install geocoder
 from geopy import distance
 from geopy.distance import geodesic  # Calculating distances between geographical coordinates
@@ -38,20 +39,29 @@ from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
 # - AudioUtilities: Provides functions to get all active audio devices.
 # - IAudioEndpointVolume: Interface that gives access to volume settings of an audio endpoint (e.g., your speaker).
 from volume_control import init_volume_control, process_volume_command
+from LSS import (
+    lock_computer,
+    sleep_computer,
+    shutdown_computer
+)
 
-# Initialize speech recognizer and text-to-speech engine
-recognizer = sr.Recognizer()
-engine = pyttsx3.init()
+
+
 init_volume_control()
 
+# Initialize speech recognizer and text-to-speech engine
+""" recognizer = sr.Recognizer()
+engine = pyttsx3.init()
+
+
 def speak(text):
-    """Converts text to speech and speaks it aloud."""
+    #Converts text to speech and speaks it aloud.
     engine.say(text)
     print(text)
     engine.runAndWait()
 
 def listen():
-    """Listens to user input via the microphone and returns recognized speech as text."""
+    #Listens to user input via the microphone and returns recognized speech as text.
     try:
         with sr.Microphone() as mic:  # Using the system's microphone
             print("Listening...")
@@ -68,7 +78,7 @@ def listen():
         return None
     except Exception as e:
         print(f"Error: {e}")
-        return None    
+        return None     """
     
 def greet_the_user():
     hour = int(datetime.datetime.now().hour)
@@ -172,7 +182,7 @@ def get_wifi_name():
 def tell_joke():
     """Fetches and speaks a random joke."""
     joke = pyjokes.get_joke()  # Get a random joke
-    speak(joke)  # Speak the joke aloud
+    speak(f"{joke} ah ha ha ha ha he ha he he ha ha he he he he ha! That made me laugh! ha ha he he ")  # Speak the joke aloud
 
     """ def check_internet_speed():
     st = Speedtest()  # Create a Speedtest object
@@ -542,8 +552,16 @@ def handle_command(command):
         calculate_distance()
     elif any(word in command.lower() for word in ["volume", "sound level", "louder", "quieter", "mute"]):
         process_volume_command(command, speak)
+    elif "joke" in command:
+        tell_joke()
     elif "open" in command and extract_website_name(command) in command:
         open_common_website(command)
+    elif "shutdown" in command or "turn off" in command or "power off" in command:
+        shutdown_computer()
+    elif "lock" in command:
+        lock_computer()
+    elif "sleep" in command:
+        sleep_computer()
     elif "exit" in command or "stop" in command:
         speak("Goodbye Shayan Mirza! You are the best!")
         return False  # Stop the program
