@@ -44,8 +44,7 @@ from LSS import (
     sleep_computer,
     shutdown_computer
 )
-
-
+from open_dff import ( open_folder_by_voice, get_available_folders_list )
 
 init_volume_control()
 
@@ -511,6 +510,14 @@ def telldate():
     today = datetime.datetime.today().strftime("%A, %d %B %Y")
     speak(f"Today is {today}")
 
+def handle_folder_command(voice_input):
+    success, message = open_folder_by_voice(voice_input)
+    if success:
+        speak("Folder opened successfully")  # Your TTS function
+    else:
+        speak(f"Sorry, {message}")  # Your TTS function
+    return success
+
 def mathematics():
     pass
 
@@ -519,6 +526,8 @@ def tellnews():
 
 def choose_your_own_greeting():
     pass
+
+_, user_folders, drives, system_folders, special_folders = get_available_folders_list()
 
 def choose_my_name():
     pass
@@ -531,8 +540,11 @@ def handle_command(command):
      #   get_time()
     elif "search" in command and "wikipedia" in command:
         search_wikipedia(command)
-    elif "open file" in command or "open folder" in command or "open application" in command or "open app" in command:
-        open_item()
+    elif any(folder in command for folder in user_folders) or \
+         any(drive in command for drive in drives) or \
+         any(folder in command for folder in system_folders) or \
+         any(folder in command for folder in special_folders):
+         handle_folder_command(command)
     elif "open" in command and "website" in command:
         open_dynamic_website(command)
     elif "weather" in command:
